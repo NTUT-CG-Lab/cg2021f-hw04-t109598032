@@ -100,15 +100,15 @@
 			const gui = new GUI();
 			const gui2 = new GUI();
 			const loader = new MMDLoader();
-			const poses = gui.addFolder( 'Poses' );
+			var poses = gui.addFolder( 'Poses' );
 			var morphs = gui.addFolder( 'Morphs' );
 			var stdlist = gui2.addFolder( 'stdlist' );
 			var dictionary;
 			var controls = {};
 
-			var nowmodel=0;
+			var MMD_index=0;
 			const modelsname=['kizunaai','天宮こころ(Kokoro Amamiya)','るいのれ式物述有栖']	;
-			const allmodel = ['models/mmd/KizunaAI_ver1.01/KizunaAI_ver1.01/kizunaai.pmx','models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx','models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx'];
+			const modelFile = ['models/mmd/KizunaAI_ver1.01/KizunaAI_ver1.01/kizunaai.pmx','models/mmd/『天宮こころ(Kokoro Amamiya)』/『天宮こころ(Kokoro Amamiya)』.pmx','models/mmd/るいのれ式物述有栖_配布用フォルダ/物述有栖.pmx'];
 			const vpds = [];
 			var standardlist = {eyebrow_troubled_left: 0, eyebrow_troubled_right:0,eyebrow_angry_left:0,eyebrow_angry_right:0,eyebrow_serious_left:0,eyebrow_serious_right:0,eyebrow_happy_left:0
 ,eyebrow_happy_right:0,eyebrow_lowered_left:0,eyebrow_lowered_right:0,eyebrow_raised_left:0,eyebrow_raised_right:0,eye_wink_left:0
@@ -213,7 +213,6 @@
 				window.addEventListener( 'resize', onWindowResize );
 
 				function initGui() {
-
 					
 					dictionary = mesh.morphTargetDictionary;
 	
@@ -221,15 +220,11 @@
 					const keys = [];
 					const stdlist_keys=[];
 
-					
-
 					function getBaseName( s ) {
 
 						return s.slice( s.lastIndexOf( '/' ) + 1 );
 
 					}
-
-					
 
 					function initControls() {
 						for ( const key in dictionary ) {
@@ -255,7 +250,7 @@
 							controls[ getBaseName( vpdFiles[ i ] ) ] = false;
 
 						}
-						morphToStdList();
+						update_morph2stdList();
 
 					}
 
@@ -317,7 +312,6 @@
 						}
 					}
 
-					
 					function onChangeStdList() 
 					{
 
@@ -364,6 +358,7 @@
 					initStdlistKeys();
 					initControls();
 					initKeys();
+
 					initPoses();
 					initMorphs();
 					initStdList();
@@ -389,8 +384,6 @@
 
 			}
 
-			//
-
 			function animate() {
 
 				requestAnimationFrame( animate );
@@ -412,8 +405,8 @@
 
 					//p
 					case 80:
-
-						// morphToStdList();
+					case 112:
+						// update_morph2stdList();
 						// updateGui().onChangeStdList();
 						var a=0;
 						for ( const key in standardlist ) 
@@ -421,43 +414,46 @@
 							console.log(key+':'+controls[key]);
 							a+=1;
 						}
-						console.log(a);
+						console.log("=========end log=========");
 						break;
 
 					//a
 					case 65:
+					case 97:
 						scene.remove(mesh);
 						
-						nowmodel--;
-						if(nowmodel<0)
+						MMD_index--;
+						if(MMD_index<0)
 						{
-							nowmodel = nowmodel+allmodel.length
+							MMD_index = MMD_index + modelFile.length
 						}
-						update_model();
+						switchMMD();
 						break;
 
 					//d
 					case 68:
+					case 100:
 						scene.remove(mesh);
 						
-						nowmodel++;
-						nowmodel = nowmodel%allmodel.length
+						MMD_index++;
+						MMD_index = MMD_index % modelFile.length
 						
-						update_model();
+						switchMMD();
 						break;
 
 					//s
 					case 83:
-							var gui_json = {}
-							var now_json=0;
-							for ( const key in standardlist ) 
-							{	
-								gui_json[now_json]=controls[key];
-								now_json+=1;
-							}
-							
-							var data = JSON.stringify({gui_json}, null, 4);
-							JSON_downloader(data, "application/octet-stream", "std_list_value.json");
+					case 115:
+						var gui_json = {}
+						var now_json=0;
+						for ( const key in standardlist ) 
+						{	
+							gui_json[now_json]=controls[key];
+							now_json+=1;
+						}
+						
+						var data = JSON.stringify({gui_json}, null, 4);
+						JSON_downloader(data, "application/octet-stream", "std_list_value.json");
 						break;			
 				}
 			}
@@ -629,15 +625,111 @@
 			
 			}
 
+			function update_morph2stdList() {
+				var a=0;
+				for ( const key in dictionary ) 
+				{
+					if (key == '困る' || key == '困り'){
+						controls['eyebrow_troubled_left'] = controls[key];
+						controls['eyebrow_troubled_right'] = controls[key];
+					}
+					if (key == '怒る' || key == '怒り'){
+						controls['eyebrow_angry_left'] = controls[key];
+						controls['eyebrow_angry_right'] = controls[key];
+					}
+					if (key == '真面目'){
+						controls['eyebrow_serious_left'] = controls[key];
+						controls['eyebrow_serious_right'] = controls[key];
+					}
+					if (key == 'にこり' || key == 'にこ' || key == 'にこっ'){
+						controls['eyebrow_happy_left'] = controls[key];
+						controls['eyebrow_happy_right'] = controls[key];
+					}
+					if (key == '下' || key == '眉下'){
+						controls['eyebrow_angry_left'] = controls[key];
+						controls['eyebrow_angry_right'] = controls[key];
+					}
+					if (key == '上' || key == '眉上'){
+						controls['eyebrow_lowered_left'] = controls[key];
+						controls['eyebrow_lowered_right'] = controls[key];
+					}
+					if (key == 'まばたき'){
+						controls['eye_wink_left'] = controls[key];
+						controls['eye_wink_right'] = controls[key];
+					}
+					if (key == 'ウィンク'||key == 'ウィンク２'){
+						controls['eye_wink_left'] = controls[key];
+					}
+					if (key == 'ウィンク右'||key == 'ｳｨﾝｸ２右'){
+						controls['eye_wink_right'] = controls[key];
+					}
+					if (key == '笑い'){
+						controls['eye_happy_wink_left'] = controls[key];
+						controls['eye_happy_wink_right'] = controls[key];
+					}
+					if (key == 'なごみ'){
+						controls['eye_relaxed_left'] = controls[key];
+						controls['eye_relaxed_right'] = controls[key];
+					}
+					if (key == 'じと目'){
+						controls['eye_unimpressed_left'] = controls[key];
+						controls['eye_unimpressed_right'] = controls[key];
+					}
+					if (key == '下瞼上げ'){
+						controls['eye_raised_lower_eyelid_left'] = controls[key];
+						controls['eye_raised_lower_eyelid_right'] = controls[key];
+					}
+					if (key == 'びっくり'){
+						controls['eye_surprised_left'] = controls[key];
+						controls['eye_surprised_right'] = controls[key];
+					}
+					if (key == '瞳小'){
+						controls['iris_small_left'] = controls[key];
+						controls['iris_small_right'] = controls[key];
+					}
+					if (key == 'あ'){
+						controls['mouth_aaa'] = controls[key];
+					}
+					if (key == 'い'){
+						controls['mouth_iii'] = controls[key];
+					}
+					if (key == 'う'){
+						controls['mouth_uuu'] = controls[key];
+					}
+					if (key == 'え'){
+						controls['mouth_eee'] = controls[key];
+					}
+					if (key == 'お'){
+						controls['mouth_ooo'] = controls[key];
+					}
+					if (key == '▲'){
+						controls['mouth_delta'] = controls[key];
+					}
+					if (key == 'はんっ！'){
+						controls['mouth_smirk'] = controls[key];
+					}
+					if (key == '口角上げ'){
+						controls['mouth_raised_corner_left'] = controls[key];
+						controls['mouth_raised_corner_right'] = controls[key];
+					}
+					if (key == '口角下げ'){
+						controls['mouth_lowered_corner_left'] = controls[key];
+						controls['mouth_lowered_corner_right'] = controls[key];
+					}
+					a+=1;
+				}
+			}
+
 			// 切換mmd
-			function update_model()
+			function switchMMD()
 			{
-				loader.load(allmodel[nowmodel], function (object) {
+				loader.load(modelFile[MMD_index], function (object) {
 
 				mesh = object;
 				mesh.position.y = - 10;
 
 				scene.add(mesh);
+				updateGui();
 
 				let vpdIndex = 0;
 
@@ -665,7 +757,9 @@
 
 				}, onProgress, null);
 				updateGui();
+
 			}
+			
 			function onProgress( xhr ) 
 			{
 
@@ -679,20 +773,16 @@
 			}
 
 			function updateGui() 
-			{
-				
+			{			
 				//console.log(gui)
-				gui.removeFolder(morphs)
-				gui2.removeFolder(stdlist)
+				// gui.removeFolder(poses);
+				// poses = gui.addFolder( 'Poses' );
+
+				gui.removeFolder(morphs);
 				morphs = gui.addFolder( 'Morphs' );
+
+				gui2.removeFolder(stdlist);
 				stdlist = gui2.addFolder( 'stdlist' );
-
-				// gui2.removeFolder(stdlist)
-				// stdlist = gui.addFolder( 'stdlist' );
-				
-
-				
-				
 				
 				dictionary = mesh.morphTargetDictionary;
 
@@ -700,15 +790,11 @@
 				const keys = [];
 				const stdlist_keys=[];
 
-				
-
 				function getBaseName( s ) {
 
 					return s.slice( s.lastIndexOf( '/' ) + 1 );
 
 				}
-
-
 
 				function initControls() {
 
@@ -717,9 +803,9 @@
 						controls[ key ] = 0.0;
 
 					}
-					console.log("controls:", controls)
-					console.log("dictionary:", dictionary)
-					console.log("standardlist", standardlist)
+					// console.log("controls:", controls)
+					// console.log("dictionary:", dictionary)
+					// console.log("standardlist", standardlist)
 
 					for ( const key in standardlist ) 
 					{
@@ -727,7 +813,13 @@
 						controls[ key ] = 0.0;
 
 					}
-					morphToStdList()
+
+					for ( let i = 0; i < vpdFiles.length; i ++ ) {
+
+						controls[ getBaseName( vpdFiles[ i ] ) ] = false;
+
+					}
+					update_morph2stdList()
 				}
 
 				function initKeys() {
@@ -751,6 +843,20 @@
 
 				}
 
+				function initPoses() {
+
+					const files = { default: - 1 };
+
+					for ( let i = 0; i < vpdFiles.length; i ++ ) {
+
+						files[ getBaseName( vpdFiles[ i ] ) ] = i;
+
+					}
+
+					poses.add( controls, 'pose', files ).onChange( onChangePose );
+
+				}
+
 				function initMorphs() {
 
 					
@@ -761,7 +867,6 @@
 					}
 
 				}
-
 
 				function initStdList() 
 				{
@@ -774,6 +879,21 @@
 					}
 				}
 
+				function onChangePose() {
+
+					const index = parseInt( controls.pose );
+
+					if ( index === - 1 ) {
+
+						mesh.pose();
+
+					} else {
+
+						helper.pose( mesh, vpds[ index ] );
+
+					}
+
+				}
 
 				function onChangeStdList() 
 				{
@@ -801,7 +921,6 @@
 					}
 
 				}
-
 				
 				
 
@@ -809,13 +928,16 @@
 				initControls();
 				initKeys();
 			
+				// initPoses();
 				initMorphs();
 				initStdList();
 
+				// onChangePose()
 				onChangeMorph();
 				onChangeStdList();
 
-		
+				
+				// poses.open();
 				morphs.open();
 				stdlist.open();
 
